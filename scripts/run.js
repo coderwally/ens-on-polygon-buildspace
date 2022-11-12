@@ -2,17 +2,20 @@ const main = async () => {
     // The first return is the deployer, the second is a random account
     const [owner, randomPerson] = await hre.ethers.getSigners();
     const domainContractFactory = await hre.ethers.getContractFactory('Domains');
-    const domainContract = await domainContractFactory.deploy('whipple');
+    const domainContract = await domainContractFactory.deploy('love');
     await domainContract.deployed();
     console.log("Contract deployed to: ", domainContract.address);
     console.log("Contract deployed by: ", owner.address);
 
-    const validDomain1 = "first-test-domain";
+    const validDomain1 = "domain1";
     const validDomain2 = "second-test-domain";
     const validDomain3 = "third-test-domain";
     const invalidDomain = "invalid-domain-name";
   
-    let txn = await domainContract.register(validDomain1);
+    let txn = await domainContract.register(
+        validDomain1,
+        {value: ethers.utils.parseEther("1.0")
+    });
     await txn.wait();
 
     //const allDomains = await domainContract.getAllRecords();
@@ -23,13 +26,6 @@ const main = async () => {
 
     let txnSetRecord = await domainContract.setRecord(validDomain1, "homepage123", "email123", "twitter123", "github123")
     await txnSetRecord.wait();
-
-    let price = await domainContract.price(validDomain2);
-    console.log(`Price of domain ${validDomain2}: ${price}`);
-    price = await domainContract.price("ens");
-    console.log(`Price of domain ${"ens"}: ${price}`);
-    price = await domainContract.price("four");
-    console.log(`Price of domain ${"four"}: ${price}`);
 
     //const domainRecordAfter = await domainContract.getRecord(validDomain1);
     //console.log('Domain record after setting:');
