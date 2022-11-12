@@ -2,7 +2,7 @@ const main = async () => {
     // The first return is the deployer, the second is a random account
     const [owner, randomPerson] = await hre.ethers.getSigners();
     const domainContractFactory = await hre.ethers.getContractFactory('Domains');
-    const domainContract = await domainContractFactory.deploy();
+    const domainContract = await domainContractFactory.deploy('whipple');
     await domainContract.deployed();
     console.log("Contract deployed to: ", domainContract.address);
     console.log("Contract deployed by: ", owner.address);
@@ -24,13 +24,20 @@ const main = async () => {
     let txnSetRecord = await domainContract.setRecord(validDomain1, "homepage123", "email123", "twitter123", "github123")
     await txnSetRecord.wait();
 
-    const domainRecordAfter = await domainContract.getRecord(validDomain1);
-    console.log('Domain record after setting:');
-    console.log(domainRecordAfter);    
+    let price = await domainContract.price(validDomain2);
+    console.log(`Price of domain ${validDomain2}: ${price}`);
+    price = await domainContract.price("ens");
+    console.log(`Price of domain ${"ens"}: ${price}`);
+    price = await domainContract.price("four");
+    console.log(`Price of domain ${"four"}: ${price}`);
+
+    //const domainRecordAfter = await domainContract.getRecord(validDomain1);
+    //console.log('Domain record after setting:');
+    //console.log(domainRecordAfter);    
   
     // Trying to set a record that doesn't belong to me!
-    txn = await domainContract.connect(randomPerson).setRecord(validDomain1, "hijack", "hijack", "hijack", "hijack");
-    await txn.wait();
+    //txn = await domainContract.connect(randomPerson).setRecord(validDomain1, "hijack", "hijack", "hijack", "hijack");
+    //await txn.wait();
   }
   
   const runMain = async () => {

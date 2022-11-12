@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.10;
 
+import { StringUtils } from "./libraries/StringUtils.sol";
 import "hardhat/console.sol";
 
 contract Domains {
-
     struct DomainRecord {
         string name;
         address addr;
@@ -14,14 +14,33 @@ contract Domains {
         string github;
     }
 
-    //List of all domains
+    string public tld;
+
     DomainRecord[] private domains;
 
     mapping(string => uint) private domainRecordIndexes;
 
-    constructor() {
-        console.log("Whippletree Domain Service - 2022");
+    uint constant PRICE_LENGTH_3 = 5 * 10**17; // 5 MATIC = 5 000 000 000 000 000 000 (18 decimals). We're going with 0.5 Matic cause the faucets don't give a lot
+    uint constant PRICE_LENGTH_4 = 3 * 10**17; // To charge smaller amounts, reduce the decimals. This is 0.3
+    uint constant PRICE_LENGTH_OTHER = 1 * 10**17;    
+
+    constructor(string memory _tld) payable {
+        tld = _tld;
+        console.log("%s name service deployed", _tld);
     }
+
+    // This function will give us the price of a domain based on length
+    function price(string calldata name) public pure returns(uint) {
+        uint len = StringUtils.strlen(name);
+        require(len > 0, "Invalid length");
+        if (len == 3) {
+            return PRICE_LENGTH_3;
+        } else if (len == 4) {
+            return PRICE_LENGTH_4;
+        } else {
+            return PRICE_LENGTH_OTHER;
+        }
+    }    
 
     function domainIsRegistered(string memory name) public view returns (bool) {
         for (uint256 i = 0; i < domains.length; i++) {
