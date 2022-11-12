@@ -14,7 +14,7 @@ const main = async () => {
   
     let txn = await domainContract.register(
         validDomain1,
-        {value: ethers.utils.parseEther("1.0")
+        {value: ethers.utils.parseEther("0.1")
     });
     await txn.wait();
 
