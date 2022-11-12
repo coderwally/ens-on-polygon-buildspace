@@ -37,6 +37,10 @@ contract Domains is ERC721URIStorage {
 
     event DomainRegistered(uint indexed _tokenId);
 
+    error Unauthorized();
+    error AlreadyRegistered();
+    error InvalidName(string name);
+
     constructor(string memory _tld) payable ERC721("Lovely Names", "LOVE") {
         owner = payable(msg.sender);
         tld = _tld;
@@ -71,6 +75,10 @@ contract Domains is ERC721URIStorage {
             return PRICE_LENGTH_OTHER;
         }
     }    
+
+    function valid(string calldata name) public pure returns(bool) {
+        return StringUtils.strlen(name) >= 3 && StringUtils.strlen(name) <= 10;
+    }
 
     function domainIsRegistered(string memory name) public view returns (bool) {
         for (uint256 i = 0; i < domains.length; i++) {
@@ -120,7 +128,8 @@ contract Domains is ERC721URIStorage {
     }
 
     function register(string calldata nameToRegister) public payable {
-        require(!domainIsRegistered(nameToRegister), "Domain already registered");
+        if (!valid(nameToRegister)) revert InvalidName(nameToRegister);
+        if (domainIsRegistered(nameToRegister)) revert AlreadyRegistered();
 
         uint256 _price = price(nameToRegister);
         require(msg.value >= _price, "Insufficient funds received");        
@@ -154,7 +163,7 @@ contract Domains is ERC721URIStorage {
 
         // Check that the owner is the transaction sender
         DomainRecord memory record = domains[domainRecordIndexes[name]];
-        require(msg.sender == domains[domainRecordIndexes[name]].addr, "Sender is not the owner of the domain");
+        if (msg.sender != domains[domainRecordIndexes[name]].addr) revert Unauthorized();
 
         record.website = _website;
 
