@@ -17,9 +17,6 @@ contract Domains is ERC721URIStorage {
         string name;
         address addr;
         string website;
-        string email;
-        string twitter;
-        string github;
         uint tokenId;
     }
 
@@ -36,12 +33,31 @@ contract Domains is ERC721URIStorage {
     string svgPartOne = '<svg xmlns="http://www.w3.org/2000/svg" width="270" height="270" fill="none"><path fill="url(#B)" d="M0 0h270v270H0z"/><defs><filter id="A" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse" height="270" width="270"><feDropShadow dx="0" dy="1" stdDeviation="2" flood-opacity=".225" width="200%" height="200%"/></filter></defs><path d="M72.863 42.949c-.668-.387-1.426-.59-2.197-.59s-1.529.204-2.197.59l-10.081 6.032-6.85 3.934-10.081 6.032c-.668.387-1.426.59-2.197.59s-1.529-.204-2.197-.59l-8.013-4.721a4.52 4.52 0 0 1-1.589-1.616c-.384-.665-.594-1.418-.608-2.187v-9.31c-.013-.775.185-1.538.572-2.208a4.25 4.25 0 0 1 1.625-1.595l7.884-4.59c.668-.387 1.426-.59 2.197-.59s1.529.204 2.197.59l7.884 4.59a4.52 4.52 0 0 1 1.589 1.616c.384.665.594 1.418.608 2.187v6.032l6.85-4.065v-6.032c.013-.775-.185-1.538-.572-2.208a4.25 4.25 0 0 0-1.625-1.595L41.456 24.59c-.668-.387-1.426-.59-2.197-.59s-1.529.204-2.197.59l-14.864 8.655a4.25 4.25 0 0 0-1.625 1.595c-.387.67-.585 1.434-.572 2.208v17.441c-.013.775.185 1.538.572 2.208a4.25 4.25 0 0 0 1.625 1.595l14.864 8.655c.668.387 1.426.59 2.197.59s1.529-.204 2.197-.59l10.081-5.901 6.85-4.065 10.081-5.901c.668-.387 1.426-.59 2.197-.59s1.529.204 2.197.59l7.884 4.59a4.52 4.52 0 0 1 1.589 1.616c.384.665.594 1.418.608 2.187v9.311c.013.775-.185 1.538-.572 2.208a4.25 4.25 0 0 1-1.625 1.595l-7.884 4.721c-.668.387-1.426.59-2.197.59s-1.529-.204-2.197-.59l-7.884-4.59a4.52 4.52 0 0 1-1.589-1.616c-.385-.665-.594-1.418-.608-2.187v-6.032l-6.85 4.065v6.032c-.013.775.185 1.538.572 2.208a4.25 4.25 0 0 0 1.625 1.595l14.864 8.655c.668.387 1.426.59 2.197.59s1.529-.204 2.197-.59l14.864-8.655c.657-.394 1.204-.95 1.589-1.616s.594-1.418.609-2.187V55.538c.013-.775-.185-1.538-.572-2.208a4.25 4.25 0 0 0-1.625-1.595l-14.993-8.786z" fill="#fff"/><defs><linearGradient id="B" x1="0" y1="0" x2="270" y2="270" gradientUnits="userSpaceOnUse"><stop stop-color="#BA4343"/><stop offset="0.7" stop-color="#190B28" stop-opacity=".99"/></linearGradient></defs><text x="22.5" y="231" font-size="22" fill="#fff" filter="url(#A)" font-family="Plus Jakarta Sans,DejaVu Sans,Noto Color Emoji,Apple Color Emoji,sans-serif" font-weight="bold">';
     string svgPartTwo = '</text></svg>';    
 
+    address payable public owner;
+
     event DomainRegistered(uint indexed _tokenId);
 
     constructor(string memory _tld) payable ERC721("Lovely Names", "LOVE") {
+        owner = payable(msg.sender);
         tld = _tld;
         console.log("%s name service deployed", _tld);
     }
+
+    modifier onlyOwner() {
+        require(isOwner());
+        _;
+    }
+
+    function isOwner() public view returns (bool) {
+        return msg.sender == owner;
+    }
+
+    function withdraw() public onlyOwner {
+        uint amount = address(this).balance;
+    
+        (bool success, ) = msg.sender.call{value: amount}("");
+        require(success, "Failed to withdraw balance from contract");
+    }     
 
     // This function will give us the price of a domain based on length
     function price(string calldata name) public pure returns(uint) {
@@ -67,11 +83,8 @@ contract Domains is ERC721URIStorage {
 
     function getJsonMetadata(string calldata name, 
                              uint newRecordId,
-                             string memory website,
-                             string memory email,
-                             string memory twitter,
-                             string memory github) public view returns(string memory) {
-       // Combine the name passed into the function with the TLD
+                             string memory website) public view returns(string memory) {
+        // Combine the name passed into the function with the TLD
         string memory _name = string(abi.encodePacked(name, ".", tld));
 
         // Create the SVG (image) for the NFT with the name
@@ -96,19 +109,10 @@ contract Domains is ERC721URIStorage {
             '{"trait_type": "Website", "value": "',
             website,
             '"},',
-
-            '{"trait_type": "Email", "value": "',
-            email,
-            '"},',
-
-            '{"trait_type": "Twitter", "value": "',
-            twitter,
-            '"},',
-
-            '{"trait_type": "Github", "value": "',
-            github,
-            '"}',
-            ']',
+            '{"trait_type": "Address", "value": "',
+            website,
+            '"}',            
+             ']',
             '}'
         ));
 
@@ -122,7 +126,7 @@ contract Domains is ERC721URIStorage {
         require(msg.value >= _price, "Insufficient funds received");        
         
         uint256 newRecordId = _tokenIds.current();
-        string memory finalTokenUri = getJsonMetadata(nameToRegister, newRecordId, "", "", "", "");
+        string memory finalTokenUri = getJsonMetadata(nameToRegister, newRecordId, "");
 
         console.log("\n--------------------------------------------------------");
         console.log("Final tokenURI", finalTokenUri);
@@ -132,7 +136,7 @@ contract Domains is ERC721URIStorage {
         _setTokenURI(newRecordId, finalTokenUri);
 
         //Add domain record and save the index where it's stored in the array
-        domains.push(DomainRecord({name: nameToRegister, addr: msg.sender, website: "", email: "", twitter: "", github: "", tokenId: newRecordId }));
+        domains.push(DomainRecord({name: nameToRegister, addr: msg.sender, website: "", tokenId: newRecordId }));
         domainRecordIndexes[nameToRegister] = domains.length - 1;
 
         emit DomainRegistered(newRecordId);
@@ -145,7 +149,7 @@ contract Domains is ERC721URIStorage {
         return domains[domainRecordIndexes[name]].addr;
     }
 
-    function setRecord(string calldata name, string calldata _website, string calldata _email, string calldata _twitter, string calldata _github) public {
+    function setRecord(string calldata name, string calldata _website) public {
         require(domainIsRegistered(name), "Unknown domain");
 
         // Check that the owner is the transaction sender
@@ -153,14 +157,11 @@ contract Domains is ERC721URIStorage {
         require(msg.sender == domains[domainRecordIndexes[name]].addr, "Sender is not the owner of the domain");
 
         record.website = _website;
-        record.email = _email;
-        record.twitter = _twitter;
-        record.github = _github;
 
         domains[domainRecordIndexes[name]] = record;
 
         // Update the metadata
-        string memory finalTokenUri = getJsonMetadata(name, record.tokenId, _website, _email, _twitter, _github);
+        string memory finalTokenUri = getJsonMetadata(name, record.tokenId, _website);
         _setTokenURI(record.tokenId, finalTokenUri);
     }
 
