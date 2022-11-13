@@ -92,7 +92,7 @@ contract Domains is ERC721URIStorage {
 
     function getJsonMetadata(string calldata name, 
                              string memory website,
-                             string memory email) public view returns(string memory) {
+                             string memory email) private view returns(string memory) {
         // Combine the name passed into the function with the TLD
         string memory _name = string(abi.encodePacked(name, ".", tld));
 
@@ -163,6 +163,7 @@ contract Domains is ERC721URIStorage {
         if (msg.sender != domains[domainRecordIndexes[name]].addr) revert Unauthorized();
 
         record.website = _website;
+        record.email = _email;
 
         domains[domainRecordIndexes[name]] = record;
 

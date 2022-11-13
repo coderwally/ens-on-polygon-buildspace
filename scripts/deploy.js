@@ -1,26 +1,30 @@
 const main = async () => {
+    const FIRST_DOMAIN_TO_MINT = "launch";
+    const TLD = "love";
+  
     const domainContractFactory = await hre.ethers.getContractFactory('Domains');
-    const domainContract = await domainContractFactory.deploy("love");
+    const domainContract = await domainContractFactory.deploy(TLD);
     await domainContract.deployed();
   
     console.log("Contract deployed to:", domainContract.address);
-
-    const DOMAIN_TO_DEPLOY = "peace";
   
     // CHANGE THIS DOMAIN TO SOMETHING ELSE! I don't want to see OpenSea full of bananas lol
-    let txn = await domainContract.register(DOMAIN_TO_DEPLOY,  {value: hre.ethers.utils.parseEther('0.01')});
+    let txn = await domainContract.register(FIRST_DOMAIN_TO_MINT,  {value: hre.ethers.utils.parseEther('0.05')});
     await txn.wait();
-    console.log(`Minted domain ${DOMAIN_TO_DEPLOY}.love`);
+    console.log(`Minted domain ${FIRST_DOMAIN_TO_MINT}.${TLD}`);
   
-    txn = await domainContract.setRecord(DOMAIN_TO_DEPLOY, "peace-love.test", "peace@peace-love.test");
+    txn = await domainContract.setRecord(FIRST_DOMAIN_TO_MINT, "launch", "launch");
     await txn.wait();
-    console.log(`Set record for ${DOMAIN_TO_DEPLOY}.love`);
+    console.log(`Set record for ${FIRST_DOMAIN_TO_MINT}.${TLD}`);
   
-    const address = await domainContract.getAddress(DOMAIN_TO_DEPLOY);
-    console.log(`Owner of domain ${DOMAIN_TO_DEPLOY}: `, address);
+    const address = await domainContract.getAddress(FIRST_DOMAIN_TO_MINT);
+    console.log(`Owner of domain ${FIRST_DOMAIN_TO_MINT}.${TLD}: `, address);
   
     const balance = await hre.ethers.provider.getBalance(domainContract.address);
     console.log("Contract balance:", hre.ethers.utils.formatEther(balance));
+
+    const allRecords = await domainContract.getAllRecords();
+    console.log(allRecords);
   }
   
   const runMain = async () => {
