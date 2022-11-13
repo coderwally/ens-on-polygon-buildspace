@@ -22,11 +22,9 @@ const main = async () => {
     const registeredEvents = txReceipt.events.filter((el) => {return el.event == "DomainRegistered"});
     const mintedTokenId = registeredEvents[0].args["_tokenId"].toNumber();
 
-    const metadata = await domainContract.getJsonMetadata(validDomain1, mintedTokenId, "www", "email", "twit", "git");
-    //console.log('Metadata:');
-    //console.log(metadata);
+    //const metadata = await domainContract.getJsonMetadata(validDomain1, "www", "email");
 
-    txn = await domainContract.setRecord(validDomain1, "www2", "email2", "twit2", "git2");
+    txn = await domainContract.setRecord(validDomain1, "www2", "email2");
     const txRecord = await txn.wait();
 
     const uri = await domainContract.tokenURI(mintedTokenId);

@@ -17,6 +17,7 @@ contract Domains is ERC721URIStorage {
         string name;
         address addr;
         string website;
+        string email;
         uint tokenId;
     }
 
@@ -90,8 +91,8 @@ contract Domains is ERC721URIStorage {
     }
 
     function getJsonMetadata(string calldata name, 
-                             uint newRecordId,
-                             string memory website) public view returns(string memory) {
+                             string memory website,
+                             string memory email) public view returns(string memory) {
         // Combine the name passed into the function with the TLD
         string memory _name = string(abi.encodePacked(name, ".", tld));
 
@@ -100,8 +101,6 @@ contract Domains is ERC721URIStorage {
         
         uint256 length = StringUtils.strlen(name);
         string memory strLen = Strings.toString(length);
-
-        console.log("Registering %s.%s on the contract with tokenID %s", name, tld, newRecordId);
 
         // Create the JSON metadata of our NFT. We do this by combining strings and encoding as base64
         string memory json = Base64.encode(
@@ -117,9 +116,9 @@ contract Domains is ERC721URIStorage {
             '{"trait_type": "Website", "value": "',
             website,
             '"},',
-            '{"trait_type": "Address", "value": "',
-            website,
-            '"}',            
+            '{"trait_type": "Email", "value": "',
+            email,
+            '"}', 
              ']',
             '}'
         ));
@@ -135,17 +134,15 @@ contract Domains is ERC721URIStorage {
         require(msg.value >= _price, "Insufficient funds received");        
         
         uint256 newRecordId = _tokenIds.current();
-        string memory finalTokenUri = getJsonMetadata(nameToRegister, newRecordId, "");
-
-        console.log("\n--------------------------------------------------------");
-        console.log("Final tokenURI", finalTokenUri);
-        console.log("--------------------------------------------------------\n");
+        string memory finalTokenUri = getJsonMetadata(nameToRegister, "", "");
+        
+        console.log("Registering %s.%s on the contract with tokenID %s", nameToRegister, tld, newRecordId);
 
         _safeMint(msg.sender, newRecordId);
         _setTokenURI(newRecordId, finalTokenUri);
 
         //Add domain record and save the index where it's stored in the array
-        domains.push(DomainRecord({name: nameToRegister, addr: msg.sender, website: "", tokenId: newRecordId }));
+        domains.push(DomainRecord({name: nameToRegister, addr: msg.sender, website: "", email: "", tokenId: newRecordId }));
         domainRecordIndexes[nameToRegister] = domains.length - 1;
 
         emit DomainRegistered(newRecordId);
@@ -158,7 +155,7 @@ contract Domains is ERC721URIStorage {
         return domains[domainRecordIndexes[name]].addr;
     }
 
-    function setRecord(string calldata name, string calldata _website) public {
+    function setRecord(string calldata name, string calldata _website, string calldata _email) public {
         require(domainIsRegistered(name), "Unknown domain");
 
         // Check that the owner is the transaction sender
@@ -170,7 +167,7 @@ contract Domains is ERC721URIStorage {
         domains[domainRecordIndexes[name]] = record;
 
         // Update the metadata
-        string memory finalTokenUri = getJsonMetadata(name, record.tokenId, _website);
+        string memory finalTokenUri = getJsonMetadata(name, _website, _email);
         _setTokenURI(record.tokenId, finalTokenUri);
     }
 

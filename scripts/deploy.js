@@ -8,11 +8,11 @@ const main = async () => {
     const DOMAIN_TO_DEPLOY = "peace";
   
     // CHANGE THIS DOMAIN TO SOMETHING ELSE! I don't want to see OpenSea full of bananas lol
-    let txn = await domainContract.register(DOMAIN_TO_DEPLOY,  {value: hre.ethers.utils.parseEther('0.1')});
+    let txn = await domainContract.register(DOMAIN_TO_DEPLOY,  {value: hre.ethers.utils.parseEther('0.01')});
     await txn.wait();
     console.log(`Minted domain ${DOMAIN_TO_DEPLOY}.love`);
   
-    txn = await domainContract.setRecord(DOMAIN_TO_DEPLOY, "peace-love.test", "peace@peace-love.test", "@peace_love", "@peacelove");
+    txn = await domainContract.setRecord(DOMAIN_TO_DEPLOY, "peace-love.test", "peace@peace-love.test");
     await txn.wait();
     console.log(`Set record for ${DOMAIN_TO_DEPLOY}.love`);
   

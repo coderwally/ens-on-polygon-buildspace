@@ -39,7 +39,7 @@ const main = async () => {
       }    
 
 
-    txn = await domainContract.connect(superCoder).setRecord(validDomain1, "homepage123");
+    txn = await domainContract.connect(superCoder).setRecord(validDomain1, "homepage123", "email123");
     await txn.wait();
 
     //const allDomains = await domainContract.getAllRecords();
@@ -48,7 +48,7 @@ const main = async () => {
     const domainAddress = await domainContract.getAddress(validDomain1);
     console.log(`Owner of domain ${validDomain1}: `, domainAddress);
 
-    let txnSetRecord = await domainContract.setRecord(validDomain1, "homepage123")
+    let txnSetRecord = await domainContract.setRecord(validDomain1, "homepage123", "email345")
     await txnSetRecord.wait();
 
     const balance = await hre.ethers.provider.getBalance(domainContract.address);
